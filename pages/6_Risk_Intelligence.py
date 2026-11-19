@@ -66,7 +66,7 @@ st.sidebar.markdown("### ⚙️ Risk Engine Controls")
 datasets = get_all_datasets()
 dataset_options = {"All Datasets": None}
 for d in datasets:
-    dataset_options[f"#{d.dataset_id} - {d.dataset_name} ({d.record_count:,})"] = d.dataset_id
+    dataset_options[f"#{d['dataset_id']} - {d['dataset_name']} ({d['record_count']:,})"] = d["dataset_id"]
 
 selected_ds_label = st.sidebar.selectbox("Active Dataset", options=list(dataset_options.keys()), index=0)
 selected_ds_id = dataset_options[selected_ds_label]

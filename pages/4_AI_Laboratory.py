@@ -110,7 +110,7 @@ st.markdown("### 🎛️ Model Configuration & Training")
 datasets = get_all_datasets()
 dataset_options = {"All Datasets": None}
 for d in datasets:
-    dataset_options[f"#{d.dataset_id} - {d.dataset_name} ({d.record_count:,})"] = d.dataset_id
+    dataset_options[f"#{d['dataset_id']} - {d['dataset_name']} ({d['record_count']:,})"] = d["dataset_id"]
 
 col_p1, col_p2 = st.columns([1, 2])
 

@@ -193,13 +193,13 @@ else:
     table_data = []
     for d in all_datasets:
         table_data.append({
-            "ID": d.dataset_id,
-            "Name": d.dataset_name,
-            "Source": d.source,
-            "Upload Date": d.upload_date.strftime("%Y-%m-%d %H:%M") if d.upload_date else "N/A",
-            "Record Count": f"{d.record_count:,}",
-            "Date Range": d.date_range or "N/A",
-            "Is Demo": "Yes (Simulated)" if d.is_demo == 1 else "Real Source"
+            "ID":           d["dataset_id"],
+            "Name":         d["dataset_name"],
+            "Source":       d["source"],
+            "Upload Date":  d["upload_date"].strftime("%Y-%m-%d %H:%M") if d["upload_date"] else "N/A",
+            "Record Count": f"{d['record_count']:,}",
+            "Date Range":   d["date_range"] or "N/A",
+            "Is Demo":      "Yes (Simulated)" if d["is_demo"] == 1 else "Real Source"
         })
     df_table = pd.DataFrame(table_data)
     st.dataframe(df_table, use_container_width=True, hide_index=True)
@@ -208,7 +208,10 @@ else:
     with st.expander("🗑️ Dataset Management / Deletion"):
         del_col1, del_col2 = st.columns([3, 1])
         with del_col1:
-            ds_to_del_map = {f"#{d.dataset_id} - {d.dataset_name} ({d.record_count:,} records)": d.dataset_id for d in all_datasets}
+            ds_to_del_map = {
+                f"#{d['dataset_id']} - {d['dataset_name']} ({d['record_count']:,} records)": d["dataset_id"]
+                for d in all_datasets
+            }
             target_del_label = st.selectbox("Select dataset to delete", options=list(ds_to_del_map.keys()))
             target_del_id = ds_to_del_map[target_del_label]
         with del_col2:
@@ -234,7 +237,10 @@ st.markdown("### 🔍 Dataset Profiling & Quality Inspection")
 if not all_datasets:
     st.warning("Please upload or initialize a dataset to inspect rows and quality metrics.")
 else:
-    ds_select_map = {f"#{d.dataset_id}: {d.dataset_name}": d.dataset_id for d in all_datasets}
+    ds_select_map = {
+        f"#{d['dataset_id']}: {d['dataset_name']}": d["dataset_id"]
+        for d in all_datasets
+    }
     selected_inspect_name = st.selectbox("Select Dataset to Profile", options=list(ds_select_map.keys()))
     selected_inspect_id = ds_select_map[selected_inspect_name]
 

@@ -264,11 +264,11 @@ def render_sidebar_filters() -> Dict[str, Any]:
     """
     st.sidebar.markdown("### 🔍 Global Filters")
 
-    # Load available datasets
+    # Load available datasets (plain dicts — no ORM session needed)
     datasets = get_all_datasets()
     dataset_options = {"All Datasets": None}
     for d in datasets:
-        dataset_options[f"{d.dataset_name} ({d.record_count:,} records)"] = d.dataset_id
+        dataset_options[f"{d['dataset_name']} ({d['record_count']:,} records)"] = d["dataset_id"]
 
     selected_dataset_label = st.sidebar.selectbox(
         "Select Dataset",
@@ -317,12 +317,29 @@ def render_sidebar_filters() -> Dict[str, Any]:
 # Database Cached Helpers
 # -----------------------------------------------------------------------------
 @st.cache_data(ttl=60)
-def get_all_datasets() -> List[Any]:
-    """Retrieve all dataset records from the database."""
+def get_all_datasets() -> List[Dict[str, Any]]:
+    """
+    Retrieve all dataset records as plain dicts (never ORM objects).
+
+    Returning ORM objects outside a session causes DetachedInstanceError.
+    Converting to dicts inside the session block prevents this entirely.
+    """
     try:
         with get_db_session() as session:
             records = session.query(Dataset).order_by(Dataset.upload_date.desc()).all()
-            return records
+            return [
+                {
+                    "dataset_id":   r.dataset_id,
+                    "dataset_name": r.dataset_name,
+                    "source":       r.source,
+                    "upload_date":  r.upload_date,
+                    "record_count": r.record_count or 0,
+                    "date_range":   r.date_range,
+                    "description":  r.description,
+                    "is_demo":      r.is_demo,
+                }
+                for r in records
+            ]
     except Exception:
         return []
 
