@@ -210,11 +210,14 @@ if not risk_df.empty:
 st.markdown("---")
 st.markdown("### 🔍 Model Feature Importance & Contributing Threat Factors")
 
-# Load latest model_experiments record
-latest_exp = None
+# Load latest model_experiments record — convert to dict INSIDE the session
+# to avoid DetachedInstanceError when accessing attributes after session closes.
+latest_exp_fi = None   # feature_importance JSON string
 try:
     with get_db_session() as session:
-        latest_exp = session.query(ModelExperiment).order_by(desc(ModelExperiment.created_at)).first()
+        exp_row = session.query(ModelExperiment).order_by(desc(ModelExperiment.created_at)).first()
+        if exp_row:
+            latest_exp_fi = exp_row.feature_importance   # read inside session
 except Exception:
     pass
 
@@ -223,9 +226,9 @@ fc_col1, fc_col2 = st.columns([1, 1])
 with fc_col1:
     st.markdown("#### Predictive Driver Weights")
     feat_dict = {}
-    if latest_exp and latest_exp.feature_importance:
+    if latest_exp_fi:
         try:
-            feat_dict = json.loads(latest_exp.feature_importance)
+            feat_dict = json.loads(latest_exp_fi)
         except Exception:
             pass
 
