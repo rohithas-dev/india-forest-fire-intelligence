@@ -32,19 +32,32 @@ def get_database_url() -> str:
     """
     Determine the database URL.
 
-    Priority:
-        1. DATABASE_URL environment variable (supports PostgreSQL)
-        2. Default SQLite file  'forest_fire.db'  in the project root.
+    Priority order:
+        1. Streamlit secrets  st.secrets["DATABASE_URL"]  (Streamlit Cloud deployment)
+        2. DATABASE_URL  environment variable  (Docker / local .env)
+        3. Default SQLite file  forest_fire.db  in the project root.
     """
+    # 1. Try Streamlit secrets (available on Streamlit Cloud)
+    try:
+        import streamlit as st
+        db_url = st.secrets.get("DATABASE_URL", "")
+        if db_url:
+            if db_url.startswith("postgres://"):
+                db_url = db_url.replace("postgres://", "postgresql://", 1)
+            logger.info("Using PostgreSQL from Streamlit secrets.")
+            return db_url
+    except Exception:
+        pass
+
+    # 2. Try environment variable
     db_url = os.getenv("DATABASE_URL", "")
     if db_url:
-        # Heroku / Railway style  postgres://  →  postgresql://
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql://", 1)
-        logger.info("Using PostgreSQL database from DATABASE_URL.")
+        logger.info("Using PostgreSQL from DATABASE_URL environment variable.")
         return db_url
 
-    # Resolve path relative to this file: database/ → project root
+    # 3. Local SQLite fallback
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     db_path = os.path.join(project_root, "forest_fire.db")
     logger.info(f"Using SQLite database at: {db_path}")

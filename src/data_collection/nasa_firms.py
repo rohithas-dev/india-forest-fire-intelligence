@@ -50,9 +50,21 @@ class NASAFIRMSCollector:
         Initialise the FIRMS collector.
 
         Args:
-            api_key: FIRMS MAP_KEY. Falls back to FIRMS_API_KEY env var.
+            api_key: FIRMS MAP_KEY. Falls back to Streamlit secrets, then
+                     FIRMS_API_KEY environment variable.
         """
-        self.api_key: Optional[str] = api_key or os.getenv("FIRMS_API_KEY", "")
+        if api_key:
+            self.api_key = api_key
+        else:
+            # 1. Try Streamlit secrets (Streamlit Cloud)
+            try:
+                import streamlit as st
+                self.api_key = st.secrets.get("FIRMS_API_KEY", "")
+            except Exception:
+                self.api_key = ""
+            # 2. Fall back to env var (local development)
+            if not self.api_key:
+                self.api_key = os.getenv("FIRMS_API_KEY", "")
         self._timeout: int = 30
 
     def is_available(self) -> bool:

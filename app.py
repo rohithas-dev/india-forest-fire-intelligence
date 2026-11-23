@@ -43,11 +43,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 1. Silently initialize schema
-try:
-    initialize_schema()
-except Exception:
-    pass
+# ---------------------------------------------------------------------------
+# Startup: initialize schema + auto-seed demo data on first run
+# ---------------------------------------------------------------------------
+def _startup_init():
+    """Initialize schema and seed demo data if the database is empty."""
+    try:
+        initialize_schema()
+    except Exception:
+        pass
+
+    # Auto-seed demo data the very first time (empty database)
+    try:
+        from database.db import get_db_session
+        from database.models import FireEvent
+        with get_db_session() as session:
+            count = session.query(FireEvent).count()
+        if count == 0:
+            with st.spinner("🌱 First launch detected — seeding demonstration data (this takes ~15s)..."):
+                import subprocess, sys
+                subprocess.run(
+                    [sys.executable, "scripts/initialize_database.py"],
+                    check=False, capture_output=True
+                )
+            st.cache_data.clear()
+    except Exception:
+        pass
+
+_startup_init()
 
 # 2. Inject CSS
 inject_css()
